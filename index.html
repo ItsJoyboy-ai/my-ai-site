@@ -1,0 +1,61 @@
+// Paste your API key from Google AI Studio here
+const GEMINI_API_KEY =AQ.Ab8RN6IX82DXYvXKQTZuwVwkZeOgXkspg7xg1zu3bJ6e5TV0qw
+
+async function getAIResponse(userPrompt) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: userPrompt }]
+                }]
+            })
+        });
+
+        const data = await response.json();
+
+        // Extract and return the AI text response
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            return "Sorry, I couldn't generate a response. Check your API key.";
+        }
+    } catch (error) {
+        console.error("API Error:", error);
+        return "Network error. Please try again.";
+    }
+}
+
+async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const chatContainer = document.getElementById('chatContainer');
+    const messageText = input.value.trim();
+
+    if (messageText === "") return;
+
+    // Display User Message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'message user-message';
+    userMsg.textContent = messageText;
+    chatContainer.appendChild(userMsg);
+
+    input.value = '';
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    // Show temporary loading indicator
+    const botMsg = document.createElement('div');
+    botMsg.className = 'message bot-message';
+    botMsg.textContent = "Thinking...";
+    chatContainer.appendChild(botMsg);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    // Fetch real response from Gemini API
+    const aiResponseText = await getAIResponse(messageText);
+    botMsg.textContent = aiResponseText;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
